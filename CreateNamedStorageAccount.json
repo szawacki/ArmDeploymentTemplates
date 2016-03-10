@@ -36,7 +36,5 @@
                 "accountType": "[parameters('StorageAccountType')]"
             }
         }
-    ],
-    "outputs": {
-    }
+    ]
 }
