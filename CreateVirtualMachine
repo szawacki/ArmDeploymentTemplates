@@ -1,0 +1,274 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "StorageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "VirtualComputerName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VirtualComputerType": {
+      "type": "string",
+      "defaultValue": "Client",
+      "allowedValues": [
+        "Client",
+        "Server"
+      ]
+    },
+    "VirtualComputerAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VirtualComputerAdminPassword": {
+      "type": "securestring"
+    },
+    "VirtualComputerWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "VirtualComputerSize": {
+      "type": "string",
+      "defaultValue": "Basic_A2",
+      "allowedValues": [
+        "A10",
+        "A11",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "Basic_A0",
+        "Basic_A1",
+        "Basic_A2",
+        "Basic_A3",
+        "Basic_A4",
+        "ExtraLarge",
+        "ExtraSmall",
+        "Large",
+        "Medium",
+        "Small",
+        "Standard_D1",
+        "Standard_D1_v2",
+        "Standard_D11",
+        "Standard_D11_v2",
+        "Standard_D12",
+        "Standard_D12_v2",
+        "Standard_D13",
+        "Standard_D13_v2",
+        "Standard_D14",
+        "Standard_D14_v2",
+        "Standard_D2",
+        "Standard_D2_v2",
+        "Standard_D3",
+        "Standard_D3_v2",
+        "Standard_D4",
+        "Standard_D4_v2",
+        "Standard_D5_v2",
+        "Standard_DS1",
+        "Standard_DS11",
+        "Standard_DS12",
+        "Standard_DS13",
+        "Standard_DS14",
+        "Standard_DS2",
+        "Standard_DS3",
+        "Standard_DS4",
+        "Standard_G1",
+        "Standard_G2",
+        "Standard_G3",
+        "Standard_G4",
+        "Standard_G5",
+        "Standard_GS1",
+        "Standard_GS2",
+        "Standard_GS3",
+        "Standard_GS4",
+        "Standard_GS5"
+      ]
+    },
+    "VirtualNetworkName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VirtualNetworkPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16"
+    },
+    "VirtualNetworkClientSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24"
+    },
+    "VirtualNetworkServerSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24"
+    }
+  },
+  "variables": {
+    "StorageAccountName": "[concat(toLower(parameters('VirtualComputerName')), 'storage')]",
+    "VirtualNetworkPrefix": "[parameters('VirtualNetworkPrefix')]",
+    "VirtualNetworkSubnet1Name": "Client",
+    "VirtualNetworkSubnet1Prefix": "[parameters('VirtualNetworkClientSubnetPrefix')]",
+    "VirtualNetworkSubnet2Name": "Server",
+    "VirtualNetworkSubnet2Prefix": "[parameters('VirtualNetworkServerSubnetPrefix')]",
+    "VirtualComputerImagePublisher": "MicrosoftWindowsServer",
+    "VirtualComputerImageOffer": "WindowsServer",
+    "VirtualComputerOSDiskName": "[concat(parameters('VirtualComputerName'), 'OSDisk')]",
+    "VirtualComputerVmSize": "[parameters('VirtualComputerSize')]",
+    "VirtualComputerVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('VirtualNetworkName'))]",
+    "VirtualComputerSubnetRef": "[concat(variables('VirtualComputerVnetID'), '/subnets/', parameters('VirtualComputerType'))]",
+    "VirtualComputerStorageAccountContainerName": "vhds",
+    "VirtualComputerNicName": "[concat(parameters('VirtualComputerName'), 'Nic001')]",
+    "PublicIPName": "[concat(parameters('VirtualComputerName'), 'PublicNic001')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('StorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[variables('StorageAccountName')]"
+      },
+      "properties": {
+        "accountType": "[parameters('StorageAccountType')]"
+      }
+    },
+    {
+      "name": "[parameters('VirtualNetworkName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[parameters('VirtualNetworkName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('VirtualNetworkPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('VirtualNetworkSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('VirtualNetworkSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('VirtualNetworkSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('VirtualNetworkSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('PublicIPName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "PublicIP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[toLower(variables('PublicIPName'))]"
+        }
+      }
+    },
+    {
+      "name": "[variables('VirtualComputerNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('VirtualNetworkName'))]"
+      ],
+      "tags": {
+        "displayName": "[variables('VirtualComputerNicName')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('PublicIPName'))]"
+              },
+              "subnet": {
+                "id": "[variables('VirtualComputerSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('VirtualComputerName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('VirtualComputerNicName'))]"
+      ],
+      "tags": {
+        "displayName": "[parameters('VirtualComputerName')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('VirtualComputerVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('VirtualComputerName')]",
+          "adminUsername": "[parameters('VirtualComputerAdminUsername')]",
+          "adminPassword": "[parameters('VirtualComputerAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('VirtualComputerImagePublisher')]",
+            "offer": "[variables('VirtualComputerImageOffer')]",
+            "sku": "[parameters('VirtualComputerWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('VirtualComputerOSDiskName')]",
+            "vhd": {
+              "uri": "[concat('http://', variables('StorageAccountName'), '.blob.core.windows.net/', variables('VirtualComputerStorageAccountContainerName'), '/', variables('VirtualComputerOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('VirtualComputerNicName'))]"
+            }
+          ]
+        }
+      }
+    }
+
+  ]
+}
