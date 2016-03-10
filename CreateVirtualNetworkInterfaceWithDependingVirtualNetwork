@@ -1,0 +1,125 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "NetworkInterfaceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "PublicIPDnsName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "InterfaceSubnetName": {
+      "type": "string",
+      "defaultValue": "Client",
+      "allowedValues": [
+        "Client",
+        "Server"
+      ]
+    },
+    "VirtualNetworkName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VirtualNetworkPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16"
+    },
+    "VirtualNetworkSubnet1Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24"
+    },
+    "VirtualNetworkSubnet2Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24"
+    }
+  },
+  "variables": {
+    "VirtualNetworkPrefix": "[parameters('VirtualNetworkPrefix')]",
+    "VirtualNetworkSubnet1Name": "Client",
+    "VirtualNetworkSubnet1Prefix": "[parameters('VirtualNetworkSubnet1Prefix')]",
+    "VirtualNetworkSubnet2Name": "Server",
+    "VirtualNetworkSubnet2Prefix": "[parameters('VirtualNetworkSubnet2Prefix')]",
+    "PublicIPName": "[parameters('PublicIPDnsName')]"
+
+  },
+    "resources": [
+      {
+        "name": "[parameters('VirtualNetworkName')]",
+        "type": "Microsoft.Network/virtualNetworks",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2015-06-15",
+        "dependsOn": [ ],
+        "tags": {
+          "displayName": "[parameters('VirtualNetworkName')]"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[variables('VirtualNetworkPrefix')]"
+            ]
+          },
+          "subnets": [
+            {
+              "name": "[variables('VirtualNetworkSubnet1Name')]",
+              "properties": {
+                "addressPrefix": "[variables('VirtualNetworkSubnet1Prefix')]"
+              }
+            },
+            {
+              "name": "[variables('VirtualNetworkSubnet2Name')]",
+              "properties": {
+                "addressPrefix": "[variables('VirtualNetworkSubnet2Prefix')]"
+              }
+            }
+          ]
+        }
+      },
+      {
+          "name": "[parameters('NetworkInterfaceName')]",
+          "type": "Microsoft.Network/networkInterfaces",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-06-15",
+        "dependsOn": [
+          "[concat('Microsoft.Network/virtualNetworks/', parameters('VirtualNetworkName'))]",
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('PublicIPName'))]"
+        ],
+            "tags": {
+                "displayName": "NetworkInterface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                          "subnet": {
+                            "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('VirtualNetworkName')), '/subnets/', parameters('InterfaceSubnetName'))]"
+                          },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('PublicIPName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('PublicIPName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "PublicIP"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('PublicIPDnsName'))]"
+                }
+            }
+        }       
+    ]
+}
