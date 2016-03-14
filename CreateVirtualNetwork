@@ -1,0 +1,62 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VirtualNetworkName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VirtualNetworkPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16"
+    },
+    "VirtualNetworkSubnet1Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24"
+    },
+    "VirtualNetworkSubnet2Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24"
+    }
+  },
+  "variables": {
+    "VirtualNetworkPrefix": "[parameters('VirtualNetworkPrefix')]",
+    "VirtualNetworkSubnet1Name": "Client",
+    "VirtualNetworkSubnet1Prefix": "[parameters('VirtualNetworkSubnet1Prefix')]",
+    "VirtualNetworkSubnet2Name": "Server",
+    "VirtualNetworkSubnet2Prefix": "[parameters('VirtualNetworkSubnet2Prefix')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('VirtualNetworkName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[parameters('VirtualNetworkName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('VirtualNetworkPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('VirtualNetworkSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('VirtualNetworkSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('VirtualNetworkSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('VirtualNetworkSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
