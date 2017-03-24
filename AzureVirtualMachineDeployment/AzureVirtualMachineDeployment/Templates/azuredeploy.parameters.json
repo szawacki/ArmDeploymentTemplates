@@ -1,0 +1,36 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VirtualComputerName": {
+      "value": "VM1"
+    },
+    "VirtualComputerSize": {
+      "value": "Basic_A2"
+    },
+    "Image": {
+      "value": "VS-2015-Comm-AzureSDK-2.9-WS2012R2"
+    },
+    "InstallExtendedLoad": {
+      "value": "false"
+    },
+    "StorageAccountName": {
+      "value": "vmsstorage"
+    },
+    "StorageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "VirtualComputerAdminUserName": {
+      "value": "admin"
+    },
+    "VirtualComputerAdminPassword": {
+      "value": "123456"
+    },
+    "VirtualNetworkName": {
+      "value": "VmVnet"
+    },
+    "NumberOfAdditionalHarddisks": {
+      "value": 2
+    }
+  }
+}
